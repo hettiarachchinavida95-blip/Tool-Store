@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101b2b">
+  <meta name="description" content="Hanger Tools — a practical, local-first inventory manager for hundreds or thousands of tools.">
+  <title>Hanger Tools — Inventory Manager</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Primary navigation">
+      <div class="brand">
+        <div class="brand-logo" aria-hidden="true"><svg viewBox="0 0 28 28" fill="none"><path d="M7 8h14M7 14h14M7 20h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="M14 5v18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+        <div><div class="brand-name">HANGER<span>TOOLS</span></div><div class="brand-caption">INVENTORY MANAGER</div></div>
+      </div>
+      <div class="side-heading">WORKSPACE</div>
+      <nav class="nav-list" aria-label="Views">
+        <button class="nav-link active" data-view="inventory" aria-current="page"><span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 10v10"/></svg></span>Inventory <span class="nav-count" id="navInventoryCount">0</span></button>
+        <button class="nav-link" data-view="trash"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M4 7h16M10 4h4M6 7l1 13h10l1-13M10 11v5M14 11v5"/></svg></span>Recently deleted <span class="nav-count" id="navTrashCount">0</span></button>
+      </nav>
+      <div class="side-heading utilities-heading">DATA MANAGEMENT</div>
+      <div class="nav-list">
+        <button class="nav-link" id="importNav"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 17v3h16v-3"/></svg></span>Import tools</button>
+        <button class="nav-link" id="exportNav"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 17v3h16v-3" transform="rotate(180 12 12)"/></svg></span>Export & backup</button>
+      </div>
+      <div class="sidebar-bottom"><div class="storage-indicator"><span class="online-dot"></span> Saved in this browser</div><p>Works on GitHub Pages. Your records stay on this device until exported or connected to a shared database.</p></div>
+    </aside>
+
+    <div class="main-area">
+      <header class="topbar">
+        <div class="topbar-left"><button class="icon-button mobile-menu" id="menuToggle" aria-label="Toggle menu" aria-expanded="false"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button><div class="breadcrumb"><span>Workspace</span><span class="breadcrumb-chevron">/</span><strong id="breadcrumbCurrent">Inventory</strong></div></div>
+        <div class="topbar-right"><span class="desktop-tag"><span class="tag-dot"></span> LOCAL DATABASE</span><button class="button button-primary top-add" id="topAdd"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span>Add tool</span></button></div>
+      </header>
+      <main class="content">
+        <section class="page-intro">
+          <div><div class="eyebrow" id="pageEyebrow">YOUR WORKSPACE <span class="eyebrow-line"></span> TOOL TRACKING</div><h1 id="pageTitle">Tool inventory</h1><p id="pageSubtitle">Manage your entire equipment register in one place.</p></div>
+          <div class="intro-actions" id="introActions"><button class="button button-outline" id="exportButton"><svg viewBox="0 0 24 24"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 17v3h16v-3"/></svg> Export</button><button class="button button-primary" id="addButton"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> Add new tool</button></div>
+        </section>
+
+        <section class="stats-grid" aria-label="Inventory statistics" id="statsGrid">
+          <div class="stat-card"><div class="stat-top"><span>Registered tools</span><span class="stat-icon blue"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 10v10"/></svg></span></div><div class="stat-value" id="totalCount">0</div><div class="stat-footer">Unique tool records</div></div>
+          <div class="stat-card"><div class="stat-top"><span>Total units</span><span class="stat-icon cyan"><svg viewBox="0 0 24 24"><rect x="4" y="7" width="16" height="13" rx="2"/><path d="M9 7V4h6v3M4 13h16"/></svg></span></div><div class="stat-value" id="totalUnits">0</div><div class="stat-footer">Across all records</div></div>
+          <div class="stat-card"><div class="stat-top"><span>In use</span><span class="stat-icon violet"><svg viewBox="0 0 24 24"><path d="M8 3h8l2 6-6 3-6-3 2-6ZM12 12v9M7 21h10"/></svg></span></div><div class="stat-value" id="inUseCount">0</div><div class="stat-footer">Tools currently assigned</div></div>
+          <div class="stat-card"><div class="stat-top"><span>Low / no stock</span><span class="stat-icon amber"><svg viewBox="0 0 24 24"><path d="M12 3 2 20h20L12 3ZM12 9v5m0 3h.01"/></svg></span></div><div class="stat-value" id="lowStockCount">0</div><div class="stat-footer">Records at or below minimum</div></div>
+        </section>
+
+        <section class="inventory-panel">
+          <div class="panel-topline"><div><h2 id="tableHeading">All tools <span class="count-pill" id="tableCount">0</span></h2><p id="tableDescription">Search, organise and update your inventory.</p></div><div class="panel-actions"><button class="button button-small button-outline" id="importButton"><svg viewBox="0 0 24 24"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 17v3h16v-3"/></svg> Import CSV / JSON</button></div></div>
+          <div class="filters-row">
+            <label class="search-wrapper"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg><input id="searchInput" type="search" placeholder="Search by name, ID, brand, location..." autocomplete="off" aria-label="Search tools"><kbd>/</kbd></label>
+            <label class="select-wrap"><span class="sr-only">Filter by category</span><select id="categoryFilter"><option value="all">All categories</option></select><svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></label>
+            <label class="select-wrap"><span class="sr-only">Filter by status</span><select id="statusFilter"><option value="all">All statuses</option><option value="Available">Available</option><option value="In use">In use</option><option value="Maintenance">Maintenance</option><option value="Retired">Retired</option></select><svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></label>
+            <label class="select-wrap sort-wrap"><span class="sr-only">Sort tools</span><select id="sortSelect"><option value="updated-desc">Recently updated</option><option value="name-asc">Name: A–Z</option><option value="name-desc">Name: Z–A</option><option value="qty-desc">Highest quantity</option><option value="qty-asc">Lowest quantity</option><option value="sku-asc">Tool ID: A–Z</option></select><svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></label>
+          </div>
+          <div class="table-scroll"><table class="data-table"><thead><tr><th>TOOL DETAILS</th><th>CATEGORY</th><th>QUANTITY</th><th>STATUS</th><th>LOCATION</th><th>LAST UPDATED</th><th class="actions-col">ACTIONS</th></tr></thead><tbody id="toolRows"></tbody></table></div>
+          <div class="empty-state" id="emptyState" hidden><div class="empty-icon"><svg viewBox="0 0 48 48"><rect x="8" y="11" width="32" height="27" rx="5"/><path d="M8 19h32M19 19v19M19 26h12M19 32h8"/></svg></div><h3 id="emptyTitle">Your tool library starts here</h3><p id="emptyText">Add your first tool or import a CSV file to build your inventory.</p><div class="empty-actions" id="emptyActions"><button class="button button-primary" id="emptyAdd">Add first tool</button><button class="button button-outline" id="emptyDemo">Load demo tools</button></div></div>
+          <footer class="table-footer" id="tableFooter"><div id="resultSummary">Showing 0 tools</div><div class="pagination-controls"><label>Rows per page <select id="pageSize"><option value="25">25</option><option value="50">50</option><option value="100">100</option></select></label><span id="pageSummary">Page 1 of 1</span><button class="pagination-button" id="prevPage" aria-label="Previous page"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button><button class="pagination-button" id="nextPage" aria-label="Next page"><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button></div></footer>
+        </section>
+        <div class="page-tip"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/></svg><span><strong>Tip:</strong> To manage hundreds of tools at once, import a CSV spreadsheet. Matching tool IDs are updated automatically.</span></div>
+      </main>
+    </div>
+  </div>
+  <button class="mobile-scrim" id="mobileScrim" aria-label="Close menu" hidden></button>
+
+  <dialog class="tool-dialog" id="toolDialog" aria-labelledby="dialogTitle">
+    <form id="toolForm" novalidate>
+      <div class="dialog-head"><div><div class="dialog-kicker">TOOL RECORD</div><h2 id="dialogTitle">Add new tool</h2><p>Enter the details below to keep your register up to date.</p></div><button type="button" class="icon-button dialog-close" id="closeDialog" aria-label="Close dialog"><svg viewBox="0 0 24 24"><path d="M5 5l14 14M19 5 5 19"/></svg></button></div>
+      <div class="dialog-body">
+        <div class="form-section-label">IDENTIFICATION</div>
+        <div class="form-grid"><label class="form-field"><span>Tool name <b>*</b></span><input name="name" maxlength="150" placeholder="e.g. Cordless drill" required></label><label class="form-field"><span>Tool ID / SKU <b>*</b></span><input name="sku" maxlength="70" placeholder="e.g. TL-001" required></label><label class="form-field"><span>Category</span><input name="category" list="categorySuggestions" maxlength="80" placeholder="e.g. Power tools"><datalist id="categorySuggestions"></datalist></label><label class="form-field"><span>Brand / manufacturer</span><input name="brand" maxlength="80" placeholder="e.g. Makita"></label><label class="form-field"><span>Model number</span><input name="model" maxlength="100" placeholder="e.g. DHP482"></label><label class="form-field"><span>Serial number</span><input name="serial" maxlength="100" placeholder="Optional"></label></div>
+        <div class="form-section-label form-section-space">STOCK & LOCATION</div>
+        <div class="form-grid"><label class="form-field"><span>Quantity <b>*</b></span><input name="quantity" type="number" min="0" max="100000000" step="1" value="1" required></label><label class="form-field"><span>Minimum stock</span><input name="minStock" type="number" min="0" max="100000000" step="1" value="0"></label><label class="form-field"><span>Status</span><select name="status"><option>Available</option><option>In use</option><option>Maintenance</option><option>Retired</option></select></label><label class="form-field"><span>Storage location</span><input name="location" maxlength="120" placeholder="e.g. Rack A / Shelf 2"></label><label class="form-field form-field-wide"><span>Assigned to / custodian</span><input name="assignedTo" maxlength="120" placeholder="Employee or team (optional)"></label></div>
+        <div class="form-section-label form-section-space">ADDITIONAL DETAILS</div>
+        <div class="form-grid"><label class="form-field"><span>Purchase date</span><input name="purchaseDate" type="date"></label><label class="form-field"><span>Unit value</span><input name="unitCost" type="number" min="0" max="100000000000" step="0.01" placeholder="0.00"></label><label class="form-field form-field-wide"><span>Notes</span><textarea name="notes" rows="3" maxlength="2000" placeholder="Condition, inspection notes, remarks..."></textarea></label></div>
+        <p class="form-error" id="formError" role="alert" hidden></p>
+      </div>
+      <div class="dialog-footer"><button class="button button-outline" type="button" id="cancelDialog">Cancel</button><button class="button button-primary" type="submit" id="saveTool">Save tool</button></div>
+    </form>
+  </dialog>
+
+  <dialog class="compact-dialog" id="importDialog" aria-labelledby="importTitle"><div class="compact-content"><div class="dialog-head"><div><div class="dialog-kicker">BULK OPERATIONS</div><h2 id="importTitle">Import your tools</h2><p>Upload CSV or JSON to add or update many records at once.</p></div><button type="button" class="icon-button dialog-close" data-close="importDialog" aria-label="Close dialog"><svg viewBox="0 0 24 24"><path d="M5 5l14 14M19 5 5 19"/></svg></button></div><div class="compact-body"><label class="upload-zone" for="importFile"><svg viewBox="0 0 24 24"><path d="M12 16V4m0 0L7 9m5-5 5 5M4 16v4h16v-4"/></svg><strong>Choose a CSV or JSON file</strong><span id="selectedFilename">or click to browse your files</span><input type="file" id="importFile" accept=".csv,.json,text/csv,application/json"></label><p class="import-hint">Matching Tool IDs / SKUs will be updated; new IDs create new records. Records not in the file are kept. Maximum file size: 15 MB.</p><a class="text-link" href="sample-tools.csv" download>Download sample CSV template</a><p class="form-error" id="importError" role="alert" hidden></p></div><div class="dialog-footer"><button class="button button-outline" type="button" data-close="importDialog">Cancel</button><button class="button button-primary" id="runImport" disabled>Import tools</button></div></div></dialog>
+
+  <dialog class="compact-dialog" id="exportDialog" aria-labelledby="exportTitle"><div class="compact-content"><div class="dialog-head"><div><div class="dialog-kicker">KEEP A COPY</div><h2 id="exportTitle">Export & backup</h2><p>Save a copy of your inventory for reporting or safekeeping.</p></div><button type="button" class="icon-button dialog-close" data-close="exportDialog" aria-label="Close dialog"><svg viewBox="0 0 24 24"><path d="M5 5l14 14M19 5 5 19"/></svg></button></div><div class="compact-body"><button class="export-option" id="exportCSV"><span class="export-file-icon">CSV</span><span><strong>Download as CSV</strong><small>Open and edit in Excel or Google Sheets</small></span><svg class="export-arrow" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg></button><button class="export-option" id="exportJSON"><span class="export-file-icon json-icon">JSON</span><span><strong>Download full backup (JSON)</strong><small>Includes all fields and recently deleted tools</small></span><svg class="export-arrow" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg></button><p class="import-hint">Important: this website stores records in your current browser. Export regular backups before clearing browser data or switching devices.</p></div></div></dialog>
+
+  <dialog class="compact-dialog confirmation-dialog" id="confirmDialog" aria-labelledby="confirmTitle"><div class="compact-content"><div class="confirm-symbol"><svg viewBox="0 0 24 24"><path d="M12 3 2 20h20L12 3ZM12 9v5m0 3h.01"/></svg></div><h2 id="confirmTitle">Move tool to trash?</h2><p id="confirmText">You can restore this tool later.</p><div class="dialog-footer"><button class="button button-outline" id="confirmCancel">Cancel</button><button class="button button-danger" id="confirmAccept">Move to trash</button></div></div></dialog>
+  <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="false"></div>
+</body>
+</html>
