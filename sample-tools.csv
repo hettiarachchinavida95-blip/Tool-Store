@@ -1,0 +1,4 @@
+sku,name,category,brand,model,serial,quantity,minStock,status,location,assignedTo,purchaseDate,unitCost,notes
+TL-001,Cordless Drill,Power Tools,Makita,DHP482,SN10001,5,2,Available,Rack A1,,2026-01-12,45000,Example record
+TL-002,Digital Caliper,Measuring,Mitutoyo,500-196-30,SN20002,2,1,In use,Cabinet 2,Maintenance Team,2025-08-06,32500,Example record
+TL-003,Torque Wrench,Hand Tools,Norbar,130100,SN30003,1,2,Maintenance,Cabinet 3,,2025-12-10,68000,Example low-stock record
