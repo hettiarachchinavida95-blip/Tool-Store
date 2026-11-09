@@ -22,7 +22,7 @@
   };
   const $ = id => document.getElementById(id);
   let db = null, records = [], view = 'inventory', page = 1, editingId = null, confirmCallback = null;
-  let currentFiltered = [];
+  let currentFiltered = [], pendingImage;
   const state = { query: '', category: 'all', status: 'all', sort: 'updated-desc', pageSize: 25 };
 
   function newId() { return typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `t-${Date.now()}-${Math.random().toString(36).slice(2)}`; }
@@ -121,7 +121,7 @@
     const actions = view === 'trash'
       ? `<button class="row-action" data-action="restore" data-id="${escapeHtml(r.id)}" title="Restore" aria-label="Restore ${escapeHtml(r.name)}"><svg viewBox="0 0 24 24"><path d="M3 11a9 9 0 1 1 2.5 6.2M3 4v7h7"/><path d="M12 7v5l3 2"/></svg></button><button class="row-action remove" data-action="permanent" data-id="${escapeHtml(r.id)}" title="Delete permanently" aria-label="Permanently delete ${escapeHtml(r.name)}"><svg viewBox="0 0 24 24"><path d="M4 7h16M10 4h4M6 7l1 13h10l1-13M10 11v5M14 11v5"/></svg></button>`
       : `<button class="row-action" data-action="edit" data-id="${escapeHtml(r.id)}" title="Edit tool" aria-label="Edit ${escapeHtml(r.name)}"><svg viewBox="0 0 24 24"><path d="m15 5 4 4M4 20l5-.9L20 7a2.1 2.1 0 0 0-3-3L5 16Z"/></svg></button><button class="row-action remove" data-action="delete" data-id="${escapeHtml(r.id)}" title="Move to trash" aria-label="Move ${escapeHtml(r.name)} to trash"><svg viewBox="0 0 24 24"><path d="M4 7h16M10 4h4M6 7l1 13h10l1-13M10 11v5M14 11v5"/></svg></button>`;
-    return `<tr><td><div class="tool-cell"><span class="tool-avatar">${escapeHtml(avatar)}</span><div><div class="tool-name">${escapeHtml(r.name)}</div><div class="tool-sku">${escapeHtml(r.sku)}${r.brand ? ' · '+escapeHtml(r.brand) : ''}</div></div></div></td><td><span class="category-tag">${escapeHtml(r.category || 'Uncategorised')}</span></td><td><span class="quantity-main${low ? ' quantity-low':''}">${compactNumber(r.quantity)}</span>${low ? '<span class="qty-hint">Low stock</span>' : ''}</td><td><span class="status-pill status-${escapeHtml(statusKey)}">${escapeHtml(r.status)}</span></td><td>${r.location ? escapeHtml(r.location) : '<span class="table-muted">Not specified</span>'}</td><td><span class="table-muted">${escapeHtml(displayDate(view === 'trash' ? r.deletedAt : r.updatedAt))}</span></td><td><div class="row-actions">${actions}</div></td></tr>`;
+    return `<tr><td><div class="tool-cell">${photoOrAvatar(r, avatar)}<div><div class="tool-name">${escapeHtml(r.name)}</div><div class="tool-sku">${escapeHtml(r.sku)}${r.brand ? ' · '+escapeHtml(r.brand) : ''}</div></div></div></td><td><span class="category-tag">${escapeHtml(r.category || 'Uncategorised')}</span></td><td><span class="quantity-main${low ? ' quantity-low':''}">${compactNumber(r.quantity)}</span>${low ? '<span class="qty-hint">Low stock</span>' : ''}</td><td><span class="status-pill status-${escapeHtml(statusKey)}">${escapeHtml(r.status)}</span></td><td>${r.location ? escapeHtml(r.location) : '<span class="table-muted">Not specified</span>'}</td><td><span class="table-muted">${escapeHtml(displayDate(view === 'trash' ? r.deletedAt : r.updatedAt))}</span></td><td><div class="row-actions">${actions}</div></td></tr>`;
   }
   function render() {
     renderStatistics(); renderCategoryOptions();
@@ -164,7 +164,7 @@
   function close(dialogId) { $(dialogId).close(); }
   function showToolDialog(record = null) {
     editingId = record?.id || null;
-    $('toolForm').reset(); $('formError').hidden = true;
+    $('toolForm').reset(); $('formError').hidden = true; pendingImage = undefined; showPhoto(record ? record.image : '');
     $('dialogTitle').textContent = record ? 'Edit tool' : 'Add new tool';
     $('saveTool').textContent = record ? 'Save changes' : 'Save tool';
     const form = $('toolForm');
@@ -186,6 +186,25 @@
     if (!Number.isFinite(num) || num < 0 || num > 100000000000) throw new Error('Unit value must be a valid nonnegative number.');
     return Math.round(num*100)/100;
   }
+  function cleanImage(v) { return typeof v === 'string' && v.length <= 3000000 && /^data:image\/(jpeg|png|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(v) ? v : ''; }
+  function photoOrAvatar(r, avatar) { const img = cleanImage(r.image); return img ? `<img class="tool-thumb" alt="" src="${img}">` : `<span class="tool-avatar">${escapeHtml(avatar)}</span>`; }
+  function showPhoto(src) { const ok = cleanImage(src); $('photoPreview').hidden = !ok; $('photoRemove').hidden = !ok; if (ok) $('photoImg').src = ok; else $('photoImg').removeAttribute('src'); }
+  function readPhoto(file) {
+    return new Promise((resolve, reject) => {
+      if (!file.type.startsWith('image/')) { reject(new Error('Please choose an image file (JPG, PNG or WebP).')); return; }
+      if (file.size > 15 * 1024 * 1024) { reject(new Error('This photo is too large. Choose one under 15 MB.')); return; }
+      const url = URL.createObjectURL(file), img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, 800 / Math.max(img.width, img.height));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(img.width * scale)); canvas.height = Math.max(1, Math.round(img.height * scale));
+        const ctx = canvas.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        URL.revokeObjectURL(url); resolve(canvas.toDataURL('image/jpeg', 0.8));
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('That image could not be read. Try a JPG or PNG.')); };
+      img.src = url;
+    });
+  }
   function normalise(input, existing = null, backup = false) {
     const take = (key, fallback = '') => Object.prototype.hasOwnProperty.call(input,key) ? input[key] : (existing ? existing[key] : fallback);
     const sku = strip(take('sku'),70), name = strip(take('name'),150);
@@ -202,7 +221,7 @@
       sku,name, category:strip(take('category'),80),brand:strip(take('brand'),80),model:strip(take('model'),100),
       serial:strip(take('serial'),100),quantity,minStock,status,location:strip(take('location'),120),
       assignedTo:strip(take('assignedTo'),120),purchaseDate:date,unitCost:getCost(take('unitCost')),
-      notes:strip(take('notes'),2000),createdAt: existing?.createdAt || (backup && input.createdAt ? strip(input.createdAt,40) : now),
+      notes:strip(take('notes'),2000),image:cleanImage(take('image')),createdAt: existing?.createdAt || (backup && input.createdAt ? strip(input.createdAt,40) : now),
       updatedAt:now,deletedAt:existing?.deletedAt || (backup && input.deletedAt ? strip(input.deletedAt,40) : null)
     };
     return record;
@@ -211,6 +230,7 @@
     event.preventDefault(); $('formError').hidden = true;
     try {
       const raw = Object.fromEntries(new FormData($('toolForm')).entries());
+      if (pendingImage !== undefined) raw.image = pendingImage;
       const existing = records.find(r => r.id === editingId) || null;
       const record = normalise(raw, existing);
       if (records.some(r => r.id !== record.id && r.sku.toLowerCase() === record.sku.toLowerCase())) throw new Error('This Tool ID / SKU is already in use. Choose a unique ID.');
@@ -337,6 +357,13 @@
     $('cancelDialog').addEventListener('click',()=>close('toolDialog'));
     document.querySelectorAll('[data-close]').forEach(btn=>btn.addEventListener('click',()=>close(btn.dataset.close)));
     $('toolForm').addEventListener('submit',saveTool);
+    $('photoFile').addEventListener('change',async()=>{
+      const file=$('photoFile').files[0];if(!file)return;
+      try{pendingImage=await readPhoto(file);showPhoto(pendingImage);$('formError').hidden=true;}
+      catch(error){$('formError').textContent=error.message;$('formError').hidden=false;}
+      $('photoFile').value='';
+    });
+    $('photoRemove').addEventListener('click',()=>{pendingImage='';showPhoto('');});
     $('toolRows').addEventListener('click',event=>{
       const btn=event.target.closest('button[data-action]');if(btn)performAction(btn.dataset.action,btn.dataset.id);
     });
