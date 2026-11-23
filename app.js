@@ -120,8 +120,8 @@
     const statusKey = r.status.toLowerCase().replace(/\s+/g,'-');
     const actions = view === 'trash'
       ? `<button class="row-action" data-action="restore" data-id="${escapeHtml(r.id)}" title="Restore" aria-label="Restore ${escapeHtml(r.name)}"><svg viewBox="0 0 24 24"><path d="M3 11a9 9 0 1 1 2.5 6.2M3 4v7h7"/><path d="M12 7v5l3 2"/></svg></button><button class="row-action remove" data-action="permanent" data-id="${escapeHtml(r.id)}" title="Delete permanently" aria-label="Permanently delete ${escapeHtml(r.name)}"><svg viewBox="0 0 24 24"><path d="M4 7h16M10 4h4M6 7l1 13h10l1-13M10 11v5M14 11v5"/></svg></button>`
-      : `<button class="row-action" data-action="edit" data-id="${escapeHtml(r.id)}" title="Edit tool" aria-label="Edit ${escapeHtml(r.name)}"><svg viewBox="0 0 24 24"><path d="m15 5 4 4M4 20l5-.9L20 7a2.1 2.1 0 0 0-3-3L5 16Z"/></svg></button><button class="row-action remove" data-action="delete" data-id="${escapeHtml(r.id)}" title="Move to trash" aria-label="Move ${escapeHtml(r.name)} to trash"><svg viewBox="0 0 24 24"><path d="M4 7h16M10 4h4M6 7l1 13h10l1-13M10 11v5M14 11v5"/></svg></button>`;
-    return `<tr><td><div class="tool-cell">${photoOrAvatar(r, avatar)}<div><div class="tool-name">${escapeHtml(r.name)}</div><div class="tool-sku">${escapeHtml(r.sku)}${r.brand ? ' · '+escapeHtml(r.brand) : ''}</div></div></div></td><td><span class="category-tag">${escapeHtml(r.category || 'Uncategorised')}</span></td><td><span class="quantity-main${low ? ' quantity-low':''}">${compactNumber(r.quantity)}</span>${low ? '<span class="qty-hint">Low stock</span>' : ''}</td><td><span class="status-pill status-${escapeHtml(statusKey)}">${escapeHtml(r.status)}</span></td><td>${r.location ? escapeHtml(r.location) : '<span class="table-muted">Not specified</span>'}</td><td><span class="table-muted">${escapeHtml(displayDate(view === 'trash' ? r.deletedAt : r.updatedAt))}</span></td><td><div class="row-actions">${actions}</div></td></tr>`;
+      : `<button class="row-action" data-action="info" data-id="${escapeHtml(r.id)}" title="Tool info" aria-label="Info about ${escapeHtml(r.name)}"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/></svg></button><button class="row-action" data-action="edit" data-id="${escapeHtml(r.id)}" title="Edit tool" aria-label="Edit ${escapeHtml(r.name)}"><svg viewBox="0 0 24 24"><path d="m15 5 4 4M4 20l5-.9L20 7a2.1 2.1 0 0 0-3-3L5 16Z"/></svg></button><button class="row-action remove" data-action="delete" data-id="${escapeHtml(r.id)}" title="Move to trash" aria-label="Move ${escapeHtml(r.name)} to trash"><svg viewBox="0 0 24 24"><path d="M4 7h16M10 4h4M6 7l1 13h10l1-13M10 11v5M14 11v5"/></svg></button>`;
+    return `<tr><td><div class="tool-cell" data-id="${escapeHtml(r.id)}">${photoOrAvatar(r, avatar)}<div><div class="tool-name">${escapeHtml(r.name)}</div><div class="tool-sku">${escapeHtml(r.sku)}${r.brand ? ' · '+escapeHtml(r.brand) : ''}</div></div></div></td><td><span class="category-tag">${escapeHtml(r.category || 'Uncategorised')}</span></td><td><span class="quantity-main${low ? ' quantity-low':''}">${compactNumber(r.quantity)}</span>${low ? '<span class="qty-hint">Low stock</span>' : ''}</td><td><span class="status-pill status-${escapeHtml(statusKey)}">${escapeHtml(r.status)}</span></td><td>${r.location ? escapeHtml(r.location) : '<span class="table-muted">Not specified</span>'}</td><td><span class="table-muted">${escapeHtml(displayDate(view === 'trash' ? r.deletedAt : r.updatedAt))}</span></td><td><div class="row-actions">${actions}</div></td></tr>`;
   }
   function render() {
     renderStatistics(); renderCategoryOptions();
@@ -144,6 +144,7 @@
     const start = (page-1)*state.pageSize;
     const items = currentFiltered.slice(start,start+state.pageSize);
     $('toolRows').innerHTML = items.map(renderRow).join('');
+    if (window.HangerInfo) HangerInfo.decorate($('toolRows'));
     const noResults = currentFiltered.length === 0;
     $('emptyState').hidden = !noResults;
     $('tableFooter').hidden = noResults;
@@ -248,6 +249,7 @@
     const record = records.find(r => r.id === id);
     if (!record) { toast('This tool could not be found.',true); return; }
     try {
+      if (action === 'info') { if (window.HangerInfo) HangerInfo.open(record); return; }
       if (action === 'edit') { showToolDialog(record); return; }
       if (action === 'restore') {
         await bulkWrite([{...record,deletedAt:null,updatedAt:new Date().toISOString()}]); await refresh(); toast(`${record.name} restored.`); return;
@@ -365,7 +367,8 @@
     });
     $('photoRemove').addEventListener('click',()=>{pendingImage='';showPhoto('');});
     $('toolRows').addEventListener('click',event=>{
-      const btn=event.target.closest('button[data-action]');if(btn)performAction(btn.dataset.action,btn.dataset.id);
+      const btn=event.target.closest('button[data-action]');if(btn){performAction(btn.dataset.action,btn.dataset.id);return;}
+      const cell=event.target.closest('.tool-cell[data-id]');if(cell&&view==='inventory')performAction('info',cell.dataset.id);
     });
     $('searchInput').addEventListener('input',event=>{state.query=event.target.value;page=1;render();});
     $('categoryFilter').addEventListener('change',event=>{state.category=event.target.value;page=1;render();});
@@ -391,9 +394,27 @@
       if(event.key==='/' && !event.ctrlKey && !event.metaKey && !event.altKey && !['INPUT','TEXTAREA','SELECT'].includes(element?.tagName) && !document.querySelector('dialog[open]')){event.preventDefault();$('searchInput').focus();}
     });
   }
+  async function seedFromDatasheet() {
+    const KEY = 'hanger-store-seed-v1';
+    try {
+      if (!window.HANGER_STORE_ROWS || localStorage.getItem(KEY)) return;
+      const have = new Set(records.map(r => r.sku.toLowerCase())), now = new Date().toISOString();
+      const demo = records.filter(r => /^DEMO-\d+$/.test(r.sku) && /^Demo record/.test(r.notes || ''));
+      if (demo.length) await bulkWrite(demo.map(r => r.id), 'delete');
+      const items = HANGER_STORE_ROWS.map(([no, name, opening, written, closing, remarks]) => {
+        const fam = window.HangerInfo && HangerInfo.familyFor(name);
+        const status = remarks && /repair/i.test(remarks) && closing > 0 ? 'Maintenance' : closing > 0 ? 'Available' : written > 0 ? 'Retired' : 'Available';
+        return { id: newId(), sku: `TS-${String(no).padStart(3, '0')}`, name, category: fam ? fam.cat : 'Other', brand: '', model: '', serial: '', quantity: closing, minStock: 0, status, location: '', assignedTo: '', purchaseDate: '', unitCost: '', notes: `Tool store stock list: opening ${opening}, written off/salvage ${written}, closing ${closing}.${remarks ? ' ' + remarks + '.' : ''}`, image: '', createdAt: now, updatedAt: now, deletedAt: null };
+      }).filter(r => !have.has(r.sku.toLowerCase()));
+      await bulkWrite(items);
+      localStorage.setItem(KEY, '1');
+      await refresh();
+      toast(`${compactNumber(items.length)} tools loaded from the tool store datasheet.`);
+    } catch (error) { console.error(error); }
+  }
   async function init() {
     connectEvents();
-    try { db=await openDatabase();await refresh(); }
+    try { db=await openDatabase();await refresh();await seedFromDatasheet(); }
     catch (error) {
       handleError(error);
       $('emptyTitle').textContent='Browser storage is unavailable';

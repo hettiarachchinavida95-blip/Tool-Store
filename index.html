@@ -8,6 +8,8 @@
   <title>Hanger Tools — Inventory Manager</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="stylesheet" href="styles.css">
+  <script src="tools-data.js" defer></script>
+  <script src="tool-info.js" defer></script>
   <script src="app.js" defer></script>
 </head>
 <body>
@@ -83,6 +85,8 @@
       <div class="dialog-footer"><button class="button button-outline" type="button" id="cancelDialog">Cancel</button><button class="button button-primary" type="submit" id="saveTool">Save tool</button></div>
     </form>
   </dialog>
+
+  <dialog class="compact-dialog tool-info-dialog" id="infoDialog" aria-labelledby="infoTitle"><div class="compact-content"><div class="dialog-head"><div><div class="dialog-kicker" id="infoKicker">TOOL</div><h2 id="infoTitle">Tool</h2></div><button type="button" class="icon-button dialog-close" data-close="infoDialog" aria-label="Close dialog"><svg viewBox="0 0 24 24"><path d="M5 5l14 14M19 5 5 19"/></svg></button></div><div class="compact-body" id="infoBody"></div></div></dialog>
 
   <dialog class="compact-dialog" id="importDialog" aria-labelledby="importTitle"><div class="compact-content"><div class="dialog-head"><div><div class="dialog-kicker">BULK OPERATIONS</div><h2 id="importTitle">Import your tools</h2><p>Upload CSV or JSON to add or update many records at once.</p></div><button type="button" class="icon-button dialog-close" data-close="importDialog" aria-label="Close dialog"><svg viewBox="0 0 24 24"><path d="M5 5l14 14M19 5 5 19"/></svg></button></div><div class="compact-body"><label class="upload-zone" for="importFile"><svg viewBox="0 0 24 24"><path d="M12 16V4m0 0L7 9m5-5 5 5M4 16v4h16v-4"/></svg><strong>Choose a CSV or JSON file</strong><span id="selectedFilename">or click to browse your files</span><input type="file" id="importFile" accept=".csv,.json,text/csv,application/json"></label><p class="import-hint">Matching Tool IDs / SKUs will be updated; new IDs create new records. Records not in the file are kept. Maximum file size: 15 MB.</p><a class="text-link" href="sample-tools.csv" download>Download sample CSV template</a><p class="form-error" id="importError" role="alert" hidden></p></div><div class="dialog-footer"><button class="button button-outline" type="button" data-close="importDialog">Cancel</button><button class="button button-primary" id="runImport" disabled>Import tools</button></div></div></dialog>
 
