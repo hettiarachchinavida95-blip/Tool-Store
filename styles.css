@@ -17,3 +17,5 @@
 .info-photo{border-radius:12px;overflow:hidden;background:#f6f8fb;border:1px solid var(--line);margin-bottom:18px;display:grid;place-items:center}.info-photo img{width:100%;max-height:280px;object-fit:contain;display:block;background:#fff}
 .info-facts{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}.info-facts div{background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:10px 12px}.info-facts small{display:block;font-size:10px;color:var(--secondary);margin-bottom:4px}.info-facts b{font-size:13px}
 .tool-info-dialog h3{font-size:11px;letter-spacing:1.1px;text-transform:uppercase;color:#7b8b9b;margin:16px 0 6px}.tool-info-dialog p{font-size:13px;line-height:1.65;margin:0;color:#46566a}.tool-info-dialog .info-note{font-size:11px;color:#8998a7;margin-top:14px}.tool-info-dialog .info-note a{color:var(--accent-dark)}.info-empty{color:#8998a7}
+
+.ir-card{padding:24px 26px;margin-bottom:20px}.ir-card h2{font-size:16px;margin:0 0 18px}.ir-actions{margin-top:18px}.ir-card .form-field small{font-weight:400;color:var(--secondary)}.ir-qty{margin:0 28px 22px;text-align:left}#issuePage .page-intro{margin-bottom:20px}

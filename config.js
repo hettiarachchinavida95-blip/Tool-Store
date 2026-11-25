@@ -1,0 +1,1 @@
+window.HANGER_SHEET_URL = 'https://script.google.com/macros/s/AKfycbwweJceeQ3MSLZa5DtQmA0GWxThd_9uHNL36QH-OnMsOW4rP8Qw3Nfe3-Jc_5N9ep-K/exec'; // paste your Google Apps Script web app link between the quotes
